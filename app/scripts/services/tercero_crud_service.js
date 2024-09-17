@@ -20,7 +20,7 @@ angular.module('terceroCrudService',[])
             if (params === undefined) {
                 return $http.get(path + tabla, [{ timeout: cancelSearch.promise }, token_service.setting_bearer.headers]);
             } else {
-                return $http.get(path + tabla + "/?" + params, [{ timeout: cancelSearch.promise }, token_service.setting_bearer.headers]);
+                return $http.get(path + tabla, { timeout: cancelSearch.promise, params: params }/*[, token_service.setting_bearer.headers]*/);
             }
         },
         post: function(tabla, elemento) {

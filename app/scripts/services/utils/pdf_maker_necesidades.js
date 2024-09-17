@@ -38,14 +38,14 @@ angular.module('contractualClienteApp')
                     if(trNecesidad.Necesidad.TipoFinanciacionNecesidadId.CodigoAbreviacion === "I") {
                       for(var i = 0; i < r.Metas.length; i++) {
                         for(var j = 0; j < r.Metas[i].Actividades.length ; j++) {
-                          for(var k = 0; k < r.Metas[i].Actividades[2].FuentesActividad.length ; k++) {
+                          for(var k = 0; k < r.Metas[i].Actividades[j].FuentesActividad.length ; k++) {
                             valorRubroNecesidad = valorRubroNecesidad + r.Metas[i].Actividades[j].FuentesActividad[k].MontoParcial;
                           }
                         }
                       }
                     }else{
                       for(var i = 0; i < r.Fuentes.length; i++) {
-                        valorRubroNecesidad = valorRubroNecesidad + r.Fuentes[3].MontoParcial;
+                        valorRubroNecesidad = valorRubroNecesidad + r.Fuentes[i].MontoParcial;
                       }
                     }
                     r.InfoRubro.ValorNecesidad = valorRubroNecesidad;
@@ -90,9 +90,27 @@ angular.module('contractualClienteApp')
 
                     var dependenciaDestino = dependenciaData.filter(function (d) { return d.Id === jefeDependenciaDestino.JefeDependencia.DependenciaId })[0]
                     var dependenciaSolicitante = dependenciaData.filter(function (d) { return d.Id === jefeDependenciaSolicitante.JefeDependencia.DependenciaId })[0]
-                    var perfil;
+                    var perfil, compraBool = false, compraString = "";
+
+                    if(trNecesidad.Necesidad &&  trNecesidad.Necesidad.TipoContratoNecesidadId && trNecesidad.Necesidad.TipoContratoNecesidadId.Nombre){
+                      if(trNecesidad.Necesidad.TipoContratoNecesidadId.Nombre == "Compra"){
+                        perfil = {
+                          ValorParametro: trNecesidad.Necesidad.TipoContratoNecesidadId.Nombre
+                        };
+                        compraString = trNecesidad.Necesidad.TipoContratoNecesidadId.Nombre;
+                        compraBool = true;
+                      }
+                    }
+
                     if(trNecesidad.DetalleServicioNecesidad && trNecesidad.DetalleServicioNecesidad.TipoServicioId){
-                      perfil = trNecesidad.DetalleServicioNecesidad ? TiposServicios.find(function(element){return element.ID == trNecesidad.DetalleServicioNecesidad.TipoServicioId}): {ValorParametro: ""};
+                      perfil = trNecesidad.DetalleServicioNecesidad ? TiposServicios.find(function(element){
+                        return element.ID == trNecesidad.DetalleServicioNecesidad.TipoServicioId
+                      }): {
+                        ValorParametro: ""
+                      };
+                      if(compraBool){
+                        perfil.ValorParametro = perfil.ValorParametro + " y " +compraString;
+                      }
                     }else if(trNecesidad.DetallePrestacionServicioNecesidad && trNecesidad.DetallePrestacionServicioNecesidad.PerfilId){
                       perfil = trNecesidad.DetallePrestacionServicioNecesidad ? perfil_data.filter(function (d) {
                         return d.Id === trNecesidad.DetallePrestacionServicioNecesidad.PerfilId
@@ -165,26 +183,28 @@ angular.module('contractualClienteApp')
                                         [{ alignment: "justify", text: trNecesidad.Necesidad.Justificacion.toUpperCase() }],
                                         [{ style: "title2", text: "ESPECIFICACIONES TÉCNICAS: Si la compra o el servicio contempla especificaciones del orden técnico descríbalas." }],
                                         [
-                                            {
-                                              table: {
-                                                headerRows: 1,
-                                                widths: ["auto", "*", "auto", "auto"],
-                                                body: [
-                                                  ["Descripción", "", "Cantidad", "Unidad"],
-                                                  [
-                                                    ["Cod. 1", "Especificación:"],
-                                                    [{text: perfil.ValorParametro ?
-                                                      perfil.ValorParametro : perfil.DESCRIPCION ? perfil.DESCRIPCION:"", bold: true}, "Actividades:",
-                                                    {
-                                                      text: trNecesidad.ActividadEspecificaNecesidad ?
-                                                        trNecesidad.ActividadEspecificaNecesidad.map(function (ae, i) { return (i + 1).toString() + '. ' + ae.Descripcion + '.'}).join('\n \n') : "Ninguna", alignment: "justify"
-                                                    }],
-                                                    { text: 1, alignment: 'center' },
-                                                    ""
-                                                  ]
+                                          {
+                                            table: {
+                                              headerRows: 1,
+                                              widths: ["auto", "*", "auto", "auto"],
+                                              body: [
+                                                ["Descripción", "", "Cantidad", "Unidad"],
+                                                [
+                                                  ["Cod. 1", "Especificación:"],
+                                                  [{text: perfil.ValorParametro ?
+                                                    perfil.ValorParametro : perfil.DESCRIPCION ? perfil.DESCRIPCION : "", bold: true}, compraBool ? "Productos" : "Actividades:",
+                                                  {
+                                                    text: compraBool ? trNecesidad.ProductosCatalogoNecesidad.map(function (prod, j){ return (j + 1).toString() + '. ' + prod.ElementoNombre + '.'}).join('\n \n')
+                                                    :
+                                                    trNecesidad.ActividadEspecificaNecesidad ?
+                                                      trNecesidad.ActividadEspecificaNecesidad.map(function (ae, i) { return (i + 1).toString() + '. ' + ae.Descripcion + '.'}).join('\n \n') : "Ninguna", alignment: "justify"
+                                                  }],
+                                                  [{ text: compraBool ? trNecesidad.ProductosCatalogoNecesidad.map(function (prod){ return  "\n \n" + prod.Cantidad}).join('\n \n') : 1, alignment: 'center' }],
+                                                  ""
                                                 ]
-                                              }
+                                              ]
                                             }
+                                          }
                                         ],
                                         [{ style: "title1", text: "Información del contacto".toUpperCase() }],
                                         [[

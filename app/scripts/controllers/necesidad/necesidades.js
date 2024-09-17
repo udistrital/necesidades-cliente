@@ -8,7 +8,7 @@
  * Controller of the contractualClienteApp
  */
 angular.module('contractualClienteApp')
-    .controller('NecesidadesCtrl', function ($scope, planCuentasMidRequest, agoraRequest, parametrosRequest,catalogoRequest, necesidadService, $translate, $window,$http, $mdDialog, gridApiService, necesidadesCrudRequest) {
+    .controller('NecesidadesCtrl', function ($scope, planCuentasMidRequest, agoraRequest, parametrosRequest,catalogoRequest, necesidadService, $translate, $window,$http, $mdDialog, gridApiService, necesidadesCrudRequest, terceroMidRequest, coreAmazonRequest) {
         var self = this;
         self.offset = 0;
         self.rechazada = false;
@@ -232,19 +232,72 @@ angular.module('contractualClienteApp')
         self.cargarDatosNecesidades = function (offset, query) {
             if (query === undefined) { query = []; }
             query = typeof (query) === "string" ? [query] : query;
-            query.push("EstadoNecesidad.Nombre__not_in:Borrador");
-
-            var req = necesidadesCrudRequest.get('necesidad', $.param({
-                limit: self.gridOptions.paginationPageSize,
-                offset: offset,
-                sortby: "Id",
-                order: "desc"
+            //query.push("EstadoNecesidad.Nombre__not_in:Borrador");
+            var req;
+            req = necesidadesCrudRequest.get('necesidad', $.param({
+              query: query,
+              limit: self.gridOptions.paginationPageSize,
+              offset: offset,
+              sortby: "Id",
+              order: "desc"
             }, true));
             req.then(gridApiService.paginationFunc(self.gridOptions, offset));
             return req;
         };
 
-        self.cargarDatosNecesidades(self.offset, self.query);
+        terceroMidRequest
+        .get("propiedad/dependencia/" + window.localStorage.getItem("idTercero"))
+          .then(function (Dependencias) {
+            //trae lista dependencias
+            if (Dependencias.data !== null) {
+              self.dependencia_soli_data = Dependencias.data;
+            } else {
+              swal({
+                title: "Sin dependencias",
+                type: "error",
+                text: "No tiene dependencias relacionadas",
+                showCloseButton: true,
+                confirmButtonText: $translate.instant("CERRAR"),
+              });
+            }
+            coreAmazonRequest
+            .get("ordenador_gasto",
+              $.param({
+                limit: -1,
+                sortby: "Cargo",
+                order: "asc",
+              }))
+              .then(function (response) {
+                self.ordenador_gasto_data = response.data;
+                self.cargarQuery(self.ordenador_gasto_data);
+                self.cargarDatosNecesidades(self.offset, self.query);
+              })
+              .catch(function (err) {
+                console.info(err);
+              });
+          });
+
+        self.cargarQuery = function(infoDep) {
+          var RolOrdenadorGastoDep;
+          self.dependencia_soli_data.forEach(function(depen){
+            RolOrdenadorGastoDep = infoDep
+            .filter(function(rolf){
+              return rolf.DependenciaId === depen.Id;
+            })
+            .map(function(rol){
+              return rol.DependenciaId;
+            })
+            .join("|")
+          });
+          if(RolOrdenadorGastoDep){
+            self.query = "DependenciaNecesidadId__RolOrdenadorGasto__in:" + RolOrdenadorGastoDep;
+          } else {
+            const deps = self.dependencia_soli_data.map(function(dep){
+              return dep.Id;
+            }).join("|");
+            self.query = "DependenciaNecesidadId__DependenciaSolicitante__in:" + deps;
+          }
+        }
 
         self.transformIvaData = function(data) { // Transformar datos de IVA
             if (data) {

@@ -531,6 +531,8 @@ angular
                 self.jefe_solicitante = JD.Persona;
                 self.Necesidad.DependenciaNecesidadId.JefeDepSolicitanteId =
                   JD.JefeDependencia.Id;
+                self.Necesidad.DependenciaNecesidadId.DependenciaSolicitante =
+                  self.dependencia_solicitante;
                 // self.dependencia_solicitante.JefeDependenciaSolicitante = JD.JefeDependencia.Id; OLD
               })
               .catch(function (err) { })
@@ -550,6 +552,8 @@ angular
                 self.jefe_destino = JD.Persona;
                 self.Necesidad.DependenciaNecesidadId.JefeDepDestinoId =
                   JD.JefeDependencia.Id;
+                self.Necesidad.DependenciaNecesidadId.DependenciaDestino =
+                  self.dependencia_destino;
               })
               .catch(function (err) { })
             : _;
@@ -568,6 +572,8 @@ angular
                 self.supervisor = JD.Persona;
                 self.Necesidad.DependenciaNecesidadId.SupervisorId =
                   JD.JefeDependencia.Id;
+                self.Necesidad.DependenciaNecesidadId.DependenciaSupervisor =
+                self.dependencia_supervisor;
               })
               .catch(function (err) { })
             : _;
@@ -586,6 +592,8 @@ angular
                 self.ordenador_gasto = JD.Persona;
                 self.Necesidad.DependenciaNecesidadId.OrdenadorGastoId =
                   parseInt(JD.JefeDependencia.Id, 10);
+                self.Necesidad.DependenciaNecesidadId.RolOrdenadorGasto =
+                self.rol_ordenador_gasto;
               })
               .catch(function (err) { })
             : _;
